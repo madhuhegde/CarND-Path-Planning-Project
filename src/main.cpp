@@ -254,6 +254,7 @@ int main() {
           	}
           	
           	bool too_close = false;
+          	double check_speed = 49.0;
           	
           	for (unsigned int i=0;i<sensor_fusion.size();i++)
           	{
@@ -262,7 +263,7 @@ int main() {
           	   {
           	      double vx = sensor_fusion[i][3];
           	      double vy = sensor_fusion[i][4];
-          	      double check_speed = sqrt(vx*vx+vy*vy);
+          	      check_speed = sqrt(vx*vx+vy*vy);
           	      
           	      double check_car_s = sensor_fusion[i][5];
           	      check_car_s +=  ((double)prev_path_size*0.02*check_speed);
@@ -270,13 +271,15 @@ int main() {
           	      if ((check_car_s > car_s) && ((check_car_s - car_s)<30))
           	      {
           	         too_close = true;
+
           	      }
           	   }
           	}
           	
           	if(too_close)
           	{
-          	   ref_vel -= 0.224;
+          	   if(ref_vel > (check_speed - 0.5)) 
+          	      ref_vel -= 0.224;
           	}
           	else if(ref_vel < 49.0)
           	{
