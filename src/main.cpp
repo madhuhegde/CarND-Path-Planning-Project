@@ -253,13 +253,19 @@ int main() {
           	  car_s = end_path_s;
           	}
           	
-          	bool too_close = false;
+          	vector <bool> too_close{false, false, false};
           	double check_speed = 49.0;
           	
           	for (unsigned int i=0;i<sensor_fusion.size();i++)
           	{
           	   float d = sensor_fusion[i][6];
-          	   if((d<(2+4*lane+2)) && (d>2+4*lane-2))
+          	   int check_lane = d/4;
+          	   if(check_lane > 2)
+          	     check_lane = 2;
+          	   if(check_lane < 0)
+          	     check_lane = 0;  
+          	   
+          	   //if((d<(2+4*lane+2)) && (d>2+4*lane-2))
           	   {
           	      double vx = sensor_fusion[i][3];
           	      double vy = sensor_fusion[i][4];
@@ -270,23 +276,43 @@ int main() {
           	      
           	      if ((check_car_s > car_s) && ((check_car_s - car_s)<30))
           	      {
-          	         too_close = true;
+          	         too_close[check_lane] = true;
+          	         //if(lane > 0)
+          	           //lane = 0;
 
           	      }
           	   }
           	}
           	
-          	if(too_close)
+          	int temp_lane = lane;
+          	if(too_close[lane])
           	{
-          	   if(ref_vel > (check_speed - 0.5)) 
+          	   //if(ref_vel > (check_speed - 0.5)) 
           	      ref_vel -= 0.224;
+          	      if((lane ==0) && (too_close[1]==false))
+          	      {
+          	         temp_lane = 1;
+          	      }   
+          	      else if((lane ==2) && (too_close[1]==false))
+          	      {
+          	        temp_lane = 1;
+          	      }
+          	      else if(lane ==1)
+          	      {
+          	         if(too_close[0]==false)
+          	            temp_lane = 0;
+          	         else if (too_close[2] == false)
+          	            temp_lane = 2;  
+          	      }
+          	      
           	}
           	else if(ref_vel < 49.0)
           	{
           	  ref_vel += 0.224;
           	}
           	
-          
+            lane = temp_lane;
+            
           	vector<double> next_x_vals;
           	vector<double> next_y_vals;
           	
