@@ -180,7 +180,7 @@ int main() {
   double max_s = 6945.554;
   
   int lane = 1;
-  double ref_vel = 49.0;
+  double ref_vel = 0.0;
 
   ifstream in_map_(map_file_.c_str(), ifstream::in);
 
@@ -243,10 +243,47 @@ int main() {
           	
           	int prev_path_size = previous_path_x.size();
           	
-          	//cout << prev_path_size <<"\n";
-
           	json msgJson;
-
+          	
+          	//cout << prev_path_size <<"\n";
+          	
+          	
+          	if(prev_path_size > 0)
+          	{
+          	  car_s = end_path_s;
+          	}
+          	
+          	bool too_close = false;
+          	
+          	for (unsigned int i=0;i<sensor_fusion.size();i++)
+          	{
+          	   float d = sensor_fusion[i][6];
+          	   if((d<(2+4*lane+2)) && (d>2+4*lane-2))
+          	   {
+          	      double vx = sensor_fusion[i][3];
+          	      double vy = sensor_fusion[i][4];
+          	      double check_speed = sqrt(vx*vx+vy*vy);
+          	      
+          	      double check_car_s = sensor_fusion[i][5];
+          	      check_car_s +=  ((double)prev_path_size*0.02*check_speed);
+          	      
+          	      if ((check_car_s > car_s) && ((check_car_s - car_s)<30))
+          	      {
+          	         too_close = true;
+          	      }
+          	   }
+          	}
+          	
+          	if(too_close)
+          	{
+          	   ref_vel -= 0.224;
+          	}
+          	else if(ref_vel < 49.0)
+          	{
+          	  ref_vel += 0.224;
+          	}
+          	
+          
           	vector<double> next_x_vals;
           	vector<double> next_y_vals;
           	
@@ -271,6 +308,8 @@ int main() {
           	}
           	else
           	{
+          	  //cout << car_x <<","<< previous_path_x[0] << "," <<previous_path_x[prev_path_size-1] <<"\n";
+          	  //cout << car_s << "," << end_path_s << "\n";
           	  ref_x = previous_path_x[prev_path_size-1];
           	  ref_y = previous_path_y[prev_path_size-1];
           	  
