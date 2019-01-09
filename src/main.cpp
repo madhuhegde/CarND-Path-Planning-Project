@@ -254,6 +254,8 @@ int main() {
           	}
           	
           	vector <bool> too_close{false, false, false};
+          	vector <bool> right_next{false, false, false};
+          	
           	double check_speed = 49.0;
           	
           	for (unsigned int i=0;i<sensor_fusion.size();i++)
@@ -281,6 +283,14 @@ int main() {
           	           //lane = 0;
 
           	      }
+          	      if (abs(check_car_s - car_s)<20)
+          	      {
+          	         right_next[check_lane] = true;
+          	         //if(lane > 0)
+          	           //lane = 0;
+
+          	      }
+          	      
           	   }
           	}
           	
@@ -288,27 +298,27 @@ int main() {
           	if(too_close[lane])
           	{
           	   //if(ref_vel > (check_speed - 0.5)) 
-          	      ref_vel -= 0.224;
-          	      if((lane ==0) && (too_close[1]==false))
+          	      ref_vel -= 0.20;
+          	      if((lane ==0) && (right_next[1]==false))
           	      {
           	         temp_lane = 1;
           	      }   
-          	      else if((lane ==2) && (too_close[1]==false))
+          	      else if((lane ==2) && (right_next[1]==false))
           	      {
           	        temp_lane = 1;
           	      }
           	      else if(lane ==1)
           	      {
-          	         if(too_close[0]==false)
+          	         if(right_next[0]==false)
           	            temp_lane = 0;
-          	         else if (too_close[2] == false)
+          	         else if (right_next[2] == false)
           	            temp_lane = 2;  
           	      }
           	      
           	}
           	else if(ref_vel < 49.0)
           	{
-          	  ref_vel += 0.224;
+          	  ref_vel += 0.2;
           	}
           	
             lane = temp_lane;
@@ -356,8 +366,8 @@ int main() {
           	}
 
             vector <double> next_wp0 = getXY(car_s+30, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            vector <double> next_wp1 = getXY(car_s+60, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            vector <double> next_wp2 = getXY(car_s+90, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector <double> next_wp1 = getXY(car_s+45, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector <double> next_wp2 = getXY(car_s+65, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
             
 
             ptsx.push_back(next_wp0[0]);
@@ -390,7 +400,7 @@ int main() {
               next_y_vals.push_back(previous_path_y[i]);
             } 
             
-            double target_x = 30.0;
+            double target_x = 26.0;
             
             double target_y = s(target_x);
             double target_dist = sqrt(target_x*target_x+target_y*target_y);
