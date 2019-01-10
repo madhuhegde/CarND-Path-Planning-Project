@@ -253,8 +253,10 @@ int main() {
           	  car_s = end_path_s;
           	}
           	
-          	vector <bool> too_close{false, false, false};
+          	bool too_close = false;
+          	bool avoid_collision = false;
           	vector <bool> right_next{false, false, false};
+          	vector <bool> car_at_dist{false, false, false};
           	
           	double check_speed = 49.0;
           	
@@ -276,14 +278,17 @@ int main() {
           	      double check_car_s = sensor_fusion[i][5];
           	      check_car_s +=  ((double)prev_path_size*0.02*check_speed);
           	      
-          	      if ((check_car_s > car_s) && ((check_car_s - car_s)<30))
+          	      if ((check_car_s > car_s) && ((check_car_s - car_s)<30) && (lane==check_lane))
           	      {
-          	         too_close[check_lane] = true;
+          	         too_close = true;
+          	         if((check_car_s - car_s)<15)
+          	           avoid_collision = true;
+          	           
           	         //if(lane > 0)
           	           //lane = 0;
 
           	      }
-          	      if (abs(check_car_s - car_s)<20)
+          	      if (abs(check_car_s - car_s)<22)
           	      {
           	         right_next[check_lane] = true;
           	         //if(lane > 0)
@@ -291,14 +296,25 @@ int main() {
 
           	      }
           	      
+          	      if((check_car_s - car_s) < 40)
+          	        car_at_dist[check_lane] = true;
+          	      
           	   }
           	}
           	
           	int temp_lane = lane;
-          	if(too_close[lane])
+          	if(too_close)
           	{
           	   //if(ref_vel > (check_speed - 0.5)) 
-          	      ref_vel -= 0.20;
+          	      if(avoid_collision)
+          	      {
+          	        ref_vel -= 1.5;
+          	        cout << "Avoid Collision" <<endl;
+          	      }
+          	      else
+          	      {
+          	        ref_vel -= 0.24;
+          	      }  
           	      if((lane ==0) && (right_next[1]==false))
           	      {
           	         temp_lane = 1;
@@ -310,7 +326,12 @@ int main() {
           	      else if(lane ==1)
           	      {
           	         if(right_next[0]==false)
-          	            temp_lane = 0;
+          	         {
+          	            if((car_at_dist[0] == true) && (right_next[2] == false))
+          	              temp_lane = 2;
+          	            else
+          	              temp_lane = 0;  
+          	         }   
           	         else if (right_next[2] == false)
           	            temp_lane = 2;  
           	      }
@@ -318,7 +339,7 @@ int main() {
           	}
           	else if(ref_vel < 49.0)
           	{
-          	  ref_vel += 0.2;
+          	  ref_vel += 0.23;
           	}
           	
             lane = temp_lane;
