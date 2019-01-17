@@ -255,7 +255,7 @@ int main() {
           	
           	bool too_close = false;
           	bool avoid_collision = false;
-          	vector <bool> right_next{false, false, false};
+          	vector <bool> car_next_lane{false, false, false};
           	vector <bool> car_at_dist{false, false, false};
           	
           	double check_speed = 49.0;
@@ -278,24 +278,30 @@ int main() {
           	      double check_car_s = sensor_fusion[i][5];
           	      check_car_s +=  ((double)prev_path_size*0.02*check_speed);
           	      
+          	      
+          	      /* Check if there is a slow moving car blocking the lane */
+          	      /* If ego gets too close behind another can in the same lane, set too_close flag */
           	      if ((check_car_s > car_s) && ((check_car_s - car_s)<30) && (lane==check_lane))
           	      {
           	         too_close = true;
+          	         
+          	         /* If car is moving very slow set a flag to avoid collision */
           	         if((check_car_s - car_s)<15)
           	           avoid_collision = true;
-          	           
-          	         //if(lane > 0)
-          	           //lane = 0;
 
           	      }
+          	      
+          	      /* check if the cars in the next lane too close */
           	      if (abs(check_car_s - car_s)<22)
           	      {
-          	         right_next[check_lane] = true;
+          	         car_next_lane[check_lane] = true;
           	         //if(lane > 0)
           	           //lane = 0;
 
           	      }
           	      
+          	      /* Check if the car in the next lane is at a distance */
+          	      /* This criteria is used to chose an empty lane*/
           	      if((check_car_s - car_s) < 40)
           	        car_at_dist[check_lane] = true;
           	      
@@ -303,9 +309,11 @@ int main() {
           	}
           	
           	int temp_lane = lane;
+          	
+          	/* Logic to change lane without collision */
           	if(too_close)
           	{
-          	   //if(ref_vel > (check_speed - 0.5)) 
+          	      /* Fast deceleration to avoid collision */
           	      if(avoid_collision)
           	      {
           	        ref_vel -= 1.5;
@@ -313,33 +321,41 @@ int main() {
           	      }
           	      else
           	      {
-          	        ref_vel -= 0.24;
+          	        ref_vel -= 0.24;  // Normal deceleration 
           	      }  
-          	      if((lane ==0) && (right_next[1]==false))
+          	      
+          	      /* Chose middle lane if car is in left lane or right lane */
+          	      /* change only one lane at a time */
+          	      if((lane ==0) && (car_next_lane[1]==false))
           	      {
           	         temp_lane = 1;
           	      }   
-          	      else if((lane ==2) && (right_next[1]==false))
+          	      else if((lane ==2) && (car_next_lane[1]==false))
           	      {
           	        temp_lane = 1;
           	      }
+          	      
+          	      /* If in middle lane preference is left lane if empty */
+          	      /* Otherwise right lane if empty */
           	      else if(lane ==1)
           	      {
-          	         if(right_next[0]==false)
+          	         if(car_next_lane[0]==false)
           	         {
-          	            if((car_at_dist[0] == true) && (right_next[2] == false))
+          	            if((car_at_dist[0] == true) && (car_next_lane[2] == false))
           	              temp_lane = 2;
           	            else
           	              temp_lane = 0;  
           	         }   
-          	         else if (right_next[2] == false)
+          	         else if (car_next_lane[2] == false)
           	            temp_lane = 2;  
           	      }
           	      
           	}
+          	
+          	/* Accelerate if speed below 49.0 kmph */
           	else if(ref_vel < 49.0)
           	{
-          	  ref_vel += 0.23;
+          	  ref_vel += 0.20;
           	}
           	
             lane = temp_lane;
